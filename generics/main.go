@@ -2,6 +2,10 @@ package main
 
 import "fmt"
 
+type Number interface {
+	int64 | float64
+}
+
 func main() {
 	ints := map[string]int64{
 		"key1": 32,
@@ -13,11 +17,11 @@ func main() {
 		"key2": 64.54,
 	}
 
-	fmt.Printf("Non-Generic Sums: %v and %v\n",
+	fmt.Printf("Non-Generic Sums: %v and %.2f\n",
 		SumInts(ints),
 		SumFloats(floats))
 
-	fmt.Printf("Generic Sum: %v and %v\n",
+	fmt.Printf("Generic Sum: %v and %.2f\n",
 		SumIntsOrFloats(ints),
 		SumIntsOrFloats(floats))
 }
@@ -38,7 +42,7 @@ func SumFloats(m map[string]float64) float64 {
 	return s
 }
 
-func SumIntsOrFloats[K comparable, V int64 | float64](m map[K]V) V {
+func SumIntsOrFloats[K comparable, V Number](m map[K]V) V {
 	var s V
 	for _, v := range m {
 		s += v
