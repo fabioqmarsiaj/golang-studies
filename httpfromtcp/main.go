@@ -5,14 +5,15 @@ import (
 	"fmt"
 	"io"
 	"log"
-	"os"
+	"net"
 	"strings"
 )
 
-const inputFilePath = "messages.txt"
+const port = ":42069"
 
 func getLinesChannel(f io.ReadCloser) <-chan string {
 	lines := make(chan string)
+
 	go func() {
 		defer f.Close()
 		defer close(lines)
@@ -20,6 +21,7 @@ func getLinesChannel(f io.ReadCloser) <-chan string {
 		for {
 			b := make([]byte, 8)
 			n, err := f.Read(b)
+
 			if err != nil {
 				if currentLineContents != "" {
 					lines <- currentLineContents
@@ -37,21 +39,31 @@ func getLinesChannel(f io.ReadCloser) <-chan string {
 				currentLineContents = ""
 			}
 			currentLineContents += parts[len(parts)-1]
+
 		}
 	}()
 	return lines
 }
 
 func main() {
-	file, err := os.Open("messages.txt")
-
+	listener, err := net.Listen("tcp", port)
 	if err != nil {
-		log.Fatalf("could not open %s: %s\n", inputFilePath, err)
+		log.Fatalf("error listening for TCP traffic: %s\n", err.Error())
 	}
+	defer listener.Close()
 
-	lines := getLinesChannel(file)
+	for {
+		conn, err := listener.Accept()
+		if err != nil {
+			log.Fatalf("error: %s\n", err.Error())
+		}
+		fmt.Println("Accepted connection from", conn.RemoteAddr())
 
-	for line := range lines {
-		fmt.Printf("read: %s\n", line)
+		lines := getLinesChannel(conn)
+
+		for line := range lines {
+			fmt.Println(line)
+		}
+		fmt.Println("Connection to ", conn.RemoteAddr(), "closed")
 	}
 }
