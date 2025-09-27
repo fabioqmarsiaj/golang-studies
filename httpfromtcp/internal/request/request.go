@@ -41,10 +41,11 @@ func parseRequestLine(fullContent string) (*RequestLine, error) {
 	contentArr := strings.Split(fullContent, "\r\n")
 	requestLine := contentArr[0]
 	reqLinesArr := strings.Split(requestLine, " ")
-	//  GET / HTTP/1.1
-	//  GET
-	//   /
-	//  HTTP/1.1
+
+	if len(reqLinesArr) < 3 {
+		return nil, errors.New("request lines are incomplete")
+	}
+
 	err := requestLineValidations(reqLinesArr)
 
 	if err != nil {
